@@ -1,0 +1,8 @@
+{
+  "version": "0.1.0",
+  "tasks": {
+    "check:server": "deno check src/server.ts",
+    "check:ui": "deno run --allow-read scripts/check-ui.ts",
+    "check": "deno task check:server && deno task check:ui"
+  }
+}

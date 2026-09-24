@@ -1,0 +1,24 @@
+name: Check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: "^2"
+      - name: Check server and browser script
+        run: deno task check
+      - name: Parse PowerShell entry points
+        shell: powershell
+        run: ./scripts/check-powershell.ps1

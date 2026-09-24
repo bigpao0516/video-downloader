@@ -1,0 +1,30 @@
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Downloads and partial transfers
+downloads/
+output/
+*.part
+*.ytdl
+*.mp4
+*.m4a
+*.mp3
+*.webm
+*.mkv
+*.mov
+*.wav
+*.flac
+*.opus
+
+# Local Deno cache
+.deno/

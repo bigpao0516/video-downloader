@@ -1,0 +1,3795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal Video &amp; Music Downloader</title>
+  <meta name="description" content="High performance universal video and music downloader with playlist inspection, album art, metadata, and bulk downloading. Default save to the current user's Videos/Download folder.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #07090e;
+      --bg-card: rgba(14, 20, 33, 0.78);
+      --bg-card-hover: rgba(22, 30, 50, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #6366f1;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --accent: #06b6d4;
+      --accent-purple: #a855f7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --success: #10b981;
+      --error: #ef4444;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px 60px;
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 60%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Header */
+    .header { text-align: center; padding: 6px 0 10px; }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #818cf8;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .brand-badge .pulse {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-size: 2.7rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 30%, #cbd5e1 70%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #818cf8 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.02rem;
+      max-width: 620px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* Destination Selector Bar */
+    .destination-card {
+      background: rgba(14, 20, 33, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .destination-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .destination-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #e2e8f0;
+    }
+
+    .folder-status-badge {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      transition: all 0.2s;
+    }
+
+    .destination-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-browse {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.55);
+      color: #e0e7ff;
+      border-radius: var(--radius-sm);
+      padding: 7px 14px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      transition: all 0.2s;
+    }
+
+    .btn-browse:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.45) 0%, rgba(6, 182, 212, 0.45) 100%);
+      border-color: #818cf8;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-browse:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-reveal {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-reveal:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    .destination-input-wrapper {
+      display: flex;
+      align-items: center;
+      background: rgba(7, 10, 18, 0.9);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 4px 6px 4px 12px;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .destination-input-wrapper:focus-within {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .destination-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: #38bdf8;
+    }
+
+    .destination-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .btn-apply-path {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #7dd3fc;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-apply-path:hover {
+      background: rgba(56, 189, 248, 0.3);
+      color: white;
+    }
+
+    .presets-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .presets-label {
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .preset-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 4px 11px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .preset-chip:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .preset-chip.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #bae6fd;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+
+    /* Modal Backdrop & In-Browser File Explorer */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #0d1322;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 720px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 24px;
+      max-height: 90vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #f8fafc;
+    }
+
+    .btn-close-modal {
+      background: none;
+      border: none;
+      font-size: 1.6rem;
+      color: #94a3b8;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 6px;
+      transition: color 0.2s;
+    }
+
+    .btn-close-modal:hover { color: white; }
+
+    .modal-nav-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-modal-nav {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-nav:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-modal-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .modal-path-input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: rgba(5, 8, 15, 0.9);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 4px 6px 4px 10px;
+      gap: 6px;
+    }
+
+    .modal-path-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+    }
+
+    .btn-modal-go {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #7dd3fc;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .modal-shortcuts-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal-chips-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .modal-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .modal-chip:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: white;
+    }
+
+    .modal-chip.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+      font-weight: 600;
+    }
+
+    .modal-body-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-height: 200px;
+    }
+
+    .modal-section-title {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .modal-folders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: var(--radius-sm);
+      background: rgba(5, 8, 15, 0.6);
+    }
+
+    .folder-grid-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: #cbd5e1;
+      transition: all 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .folder-grid-item:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: #6366f1;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .folder-grid-item .f-icon { font-size: 1rem; }
+    .folder-grid-item .f-name { overflow: hidden; text-overflow: ellipsis; }
+
+    .modal-new-folder-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 4px;
+    }
+
+    .new-folder-input {
+      flex: 1;
+      background: rgba(5, 8, 15, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 0.84rem;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .new-folder-input:focus { border-color: #6366f1; }
+
+    .btn-create-folder {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-create-folder:hover { background: rgba(255, 255, 255, 0.12); }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 14px;
+      margin-top: 4px;
+    }
+
+    .btn-launch-os-picker {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-launch-os-picker:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+    }
+
+    .btn-cancel-modal {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      border-radius: var(--radius-sm);
+      padding: 9px 18px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-cancel-modal:hover { background: rgba(255, 255, 255, 0.12); color: white; }
+
+    .btn-select-modal {
+      background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 9px 22px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-select-modal:hover {
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+      transform: translateY(-1px);
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      background: rgba(14, 20, 33, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 11px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.04); }
+
+    .tab-btn.active {
+      background: rgba(99, 102, 241, 0.22);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.18);
+    }
+
+    /* Cards */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.55);
+      position: relative;
+    }
+
+    .glass-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.4), transparent);
+    }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: flex; flex-direction: column; gap: 18px; }
+
+    /* Inputs */
+    .url-wrapper {
+      display: flex;
+      align-items: center;
+      background: rgba(9, 13, 22, 0.85);
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 6px 8px 6px 16px;
+      transition: all 0.25s ease;
+    }
+
+    .url-wrapper:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .url-icon { color: var(--text-dim); margin-right: 12px; display: flex; align-items: center; }
+
+    .url-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .url-input::placeholder { color: var(--text-dim); }
+
+    .btn-paste, .btn-action-small {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-paste:hover, .btn-action-small:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+    }
+
+    /* Quality chips */
+    .quality-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+
+    .quality-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 7px 13px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .quality-chip:hover { border-color: rgba(99, 102, 241, 0.4); color: var(--text-main); }
+
+    .quality-chip.active {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: var(--primary);
+      color: #c7d2fe;
+      font-weight: 600;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .quality-chip.audio-highlight {
+      border-color: rgba(6, 182, 212, 0.35);
+    }
+    .quality-chip.audio-highlight.active {
+      background: rgba(6, 182, 212, 0.25);
+      border-color: var(--accent);
+      color: #a5f3fc;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+    }
+
+    .quality-chip.compress-highlight {
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .quality-chip.compress-highlight.active {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: #10b981;
+      color: #6ee7b7;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .size-tag {
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.1);
+      margin-left: 4px;
+      font-weight: 600;
+    }
+
+    .btn-stop-pill {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      border-radius: 9999px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-stop-pill:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+      transform: scale(1.03);
+    }
+    .btn-stop-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-stop-icon {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-stop-icon:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    }
+    .btn-stop-icon:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-resume {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 7px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-resume:hover {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+    }
+
+    .track-row.completed {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.06);
+    }
+    .track-row.completed .track-title {
+      color: #a7f3d0;
+    }
+    .track-status-pill {
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      font-weight: 600;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .track-status-pill.success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-download {
+      background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 13px 26px;
+      font-size: 1.02rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 20px -4px var(--primary-glow);
+      transition: all 0.25s ease;
+      width: 100%;
+    }
+
+    .btn-download:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -4px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-download:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Bulk / Fetch section */
+    .fetch-wrapper { display: flex; gap: 10px; }
+    .fetch-wrapper .url-wrapper { flex: 1; }
+
+    .btn-fetch {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0 22px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .btn-fetch:hover:not(:disabled) {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    }
+
+    .text-links-toggle {
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .text-links-area {
+      display: none;
+      width: 100%;
+      height: 100px;
+      background: rgba(9, 13, 22, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      resize: vertical;
+    }
+
+    /* Playlist / Album Banner */
+    .playlist-banner {
+      display: none;
+      align-items: center;
+      gap: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .playlist-cover {
+      width: 90px;
+      height: 90px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #1e293b;
+      flex-shrink: 0;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .playlist-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .playlist-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--accent);
+    }
+
+    .playlist-name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .playlist-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .playlist-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* Results Header & Filter */
+    .results-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .filter-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .filter-input {
+      width: 100%;
+      background: rgba(9, 13, 22, 0.75);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px 7px 30px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .filter-input:focus { border-color: var(--border-focus); }
+
+    .filter-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+
+    .selection-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .count-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    /* Popularity & Rank Badges */
+    .sorting-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+    }
+
+    .sort-group, .quick-filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .sort-label {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 2px;
+    }
+
+    .btn-sort {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      padding: 5px 11px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-sort:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-sort.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: #6366f1;
+      color: #c7d2fe;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+    }
+
+    .btn-quick-filter {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-quick-filter:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+    }
+
+    .btn-quick-filter.highlight {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: #fcd34d;
+    }
+
+    .btn-quick-filter.highlight:hover {
+      background: rgba(245, 158, 11, 0.22);
+      border-color: #f59e0b;
+    }
+
+    .rank-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 9px 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+
+    .rank-checkbox-label:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .rank-checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #fbbf24;
+      cursor: pointer;
+    }
+
+    .rank-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      min-width: 46px;
+      justify-content: center;
+    }
+
+    .rank-badge.rank-1 {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.28) 0%, rgba(245, 158, 11, 0.16) 100%);
+      border-color: rgba(251, 191, 36, 0.55);
+      color: #fbbf24;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.28);
+    }
+
+    .rank-badge.rank-2 {
+      background: linear-gradient(135deg, rgba(226, 232, 240, 0.24) 0%, rgba(148, 163, 184, 0.12) 100%);
+      border-color: rgba(203, 213, 225, 0.45);
+      color: #f1f5f9;
+      box-shadow: 0 0 10px rgba(203, 213, 225, 0.2);
+    }
+
+    .rank-badge.rank-3 {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.24) 0%, rgba(194, 65, 12, 0.12) 100%);
+      border-color: rgba(249, 115, 22, 0.45);
+      color: #fb923c;
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.2);
+    }
+
+    .rank-badge.rank-top10 {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+    }
+
+    .plays-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      padding: 1px 7px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* Track List Table */
+    .tracks-container {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 6px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+    }
+
+    .tracks-list {
+      max-height: 420px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(9, 13, 22, 0.55);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 6px;
+    }
+
+    /* Custom Scrollbar */
+    .tracks-list::-webkit-scrollbar { width: 8px; }
+    .tracks-list::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+    .tracks-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    .tracks-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+    .track-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .track-row:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .track-row.selected {
+      background: rgba(99, 102, 241, 0.08);
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .track-checkbox {
+      width: 17px;
+      height: 17px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .track-index {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      width: 26px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .track-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #1e293b;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .track-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .track-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-meta-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-author {
+      color: #cbd5e1;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+
+    .track-dot { color: var(--text-dim); font-size: 0.6rem; }
+
+    .track-album {
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .track-duration {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    /* Active Download Card */
+    .active-download-card {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-top: 14px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .active-thumb {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #1e293b;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .active-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .active-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .active-artist {
+      font-size: 0.8rem;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Progress Section */
+    .progress-section {
+      display: none;
+      margin-top: 14px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .progress-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-percent {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 9px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      border-radius: 9999px;
+      transition: width 0.25s ease;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .logs-toggle {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .logs-drawer {
+      display: none;
+      margin-top: 10px;
+      background: #07090e;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      max-height: 160px;
+      overflow-y: auto;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+
+    .alert-banner {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .alert-banner.success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      display: flex;
+    }
+
+    .alert-banner.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      display: flex;
+    }
+
+    /* History Card */
+    .history-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 22px 28px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+    }
+
+    .file-name {
+      font-weight: 500;
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 560px;
+    }
+
+    .file-size {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .empty-state { text-align: center; padding: 18px 0; color: var(--text-dim); font-size: 0.9rem; }
+
+    .sites-pills {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .site-pill {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-left-color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Local Library & Sorter Styles */
+    .local-folder-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-scan-folder {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: #fef08a;
+      border-radius: var(--radius-sm);
+      padding: 7px 14px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+      transition: all 0.2s;
+    }
+
+    .btn-scan-folder:hover {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.4) 0%, rgba(217, 119, 6, 0.4) 100%);
+      transform: translateY(-1px);
+    }
+
+    .disk-actions-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+
+    .disk-actions-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .disk-actions-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-disk-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-disk-action:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .btn-disk-action.primary {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.28) 0%, rgba(217, 119, 6, 0.28) 100%);
+      border-color: rgba(245, 158, 11, 0.6);
+      color: #fef3c7;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+
+    .btn-disk-action.primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.45) 0%, rgba(217, 119, 6, 0.45) 100%);
+      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
+    }
+
+    .btn-disk-action.secondary {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+    }
+
+    .btn-disk-action.secondary:hover:not(:disabled) {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: #6366f1;
+    }
+
+    .local-track-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: all 0.15s ease;
+    }
+
+    .local-track-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.09);
+      transform: translateX(2px);
+    }
+
+    .local-track-filename {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+
+    .btn-reveal-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: var(--text-dim);
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .btn-reveal-item:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- File Explorer Modal Dialog -->
+  <div id="explorerModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+      <div class="modal-header">
+        <div class="modal-title" id="modalHeading">
+          <span>📁</span>
+          <span>Choose Save Destination Folder</span>
+        </div>
+        <button type="button" id="btnCloseModal" class="btn-close-modal" title="Close modal">&times;</button>
+      </div>
+
+      <!-- Navigation & Breadcrumbs -->
+      <div class="modal-nav-bar">
+        <button type="button" id="btnNavUp" class="btn-modal-nav" title="Up to parent directory">
+          ⬆️ Up
+        </button>
+        <div class="modal-path-input-wrapper">
+          <input type="text" id="modalPathInput" class="modal-path-input" spellcheck="false" autocomplete="off">
+          <button type="button" id="btnModalGo" class="btn-modal-go">Go</button>
+        </div>
+        <button type="button" id="btnModalOpenExplorer" class="btn-modal-nav" title="Reveal this folder in Windows Explorer">
+          🔍 Reveal
+        </button>
+      </div>
+
+      <!-- Drives & Quick Shortcuts -->
+      <div class="modal-shortcuts-row">
+        <span style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600;">Drives &amp; Presets:</span>
+        <div id="modalDrivesList" class="modal-chips-row"></div>
+      </div>
+
+      <!-- Folder Contents (Subdirectories) -->
+      <div class="modal-body-content">
+        <div class="modal-section-title">Subfolders in <span id="modalCurrentFolderName" style="color: #38bdf8;">--</span>:</div>
+        <div id="modalFoldersGrid" class="modal-folders-grid">
+          <div class="empty-state">Loading folders...</div>
+        </div>
+      </div>
+
+      <!-- New Folder creation bar -->
+      <div class="modal-new-folder-bar">
+        <span style="font-size: 0.85rem; color: var(--text-muted); white-space: nowrap;">➕ Create Folder:</span>
+        <input type="text" id="newFolderNameInput" class="new-folder-input" placeholder="New folder name..." autocomplete="off">
+        <button type="button" id="btnCreateNewFolder" class="btn-create-folder">Create</button>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="modal-footer">
+        <button type="button" id="btnLaunchNativePicker" class="btn-launch-os-picker" title="Open native Windows File Explorer dialog">
+          <span id="nativePickerBtnText">🪟 Windows OS Dialog</span>
+        </button>
+        <div style="display: flex; gap: 10px;">
+          <button type="button" id="btnCancelModal" class="btn-cancel-modal">Cancel</button>
+          <button type="button" id="btnConfirmSelectFolder" class="btn-select-modal">
+            ✓ Select This Folder
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <header class="header">
+      <div class="brand-badge">
+        <span class="pulse"></span> High-Speed Engine &bull; YouTube Music, Playlists &amp; Videos
+      </div>
+      <h1>Universal <span>Media</span> Downloader</h1>
+    </header>
+
+    <!-- Save Destination Bar -->
+    <section class="destination-card" aria-label="Save Destination Selection">
+      <div class="destination-header">
+        <div class="destination-title">
+          <span>📁 Save Destination:</span>
+          <span id="folderStatusBadge" class="folder-status-badge">Default Location</span>
+        </div>
+        <div class="destination-actions">
+          <button type="button" id="btnQuickScanFolder" class="btn-scan-folder" title="Scan & Rank songs in this folder directly">
+            <span>⚡ Scan &amp; Rank</span>
+          </button>
+          <button type="button" id="btnBrowseFolder" class="btn-browse" title="Choose any folder in Windows File Explorer">
+            <span id="browseBtnText">📂 Browse Folder...</span>
+          </button>
+          <button type="button" id="btnRevealFolder" class="btn-reveal" title="Open this folder in File Explorer">
+            <span>🔍 Reveal Folder</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="destination-input-wrapper">
+        <span style="font-size: 1rem; user-select: none;">💾</span>
+        <input 
+          type="text" 
+          id="customDirInput" 
+          class="destination-input" 
+          placeholder="C:\Users\YourName\Videos\Download" 
+          spellcheck="false"
+          autocomplete="off"
+        >
+        <button type="button" id="btnApplyPath" class="btn-apply-path" title="Apply custom folder">Apply</button>
+      </div>
+
+      <div class="presets-row">
+        <span class="presets-label">Quick Locations:</span>
+        <button type="button" class="preset-chip active" data-preset="default" title="Default Videos Download">
+          📁 Videos\Download
+        </button>
+        <button type="button" class="preset-chip" data-preset="music" title="Windows Music folder">
+          🎵 Music
+        </button>
+        <button type="button" class="preset-chip" data-preset="downloads" title="Windows Downloads folder">
+          📥 Downloads
+        </button>
+        <button type="button" class="preset-chip" data-preset="desktop" title="Desktop folder">
+          💻 Desktop
+        </button>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav" aria-label="Downloader Modes">
+      <button type="button" class="tab-btn" id="tabSingle" onclick="switchTab('single')">
+        ⚡ Single Link
+      </button>
+      <button type="button" class="tab-btn" id="tabBulk" onclick="switchTab('bulk')">
+        📋 Playlist / Album Inspector &amp; Bulk
+      </button>
+      <button type="button" class="tab-btn active" id="tabLocal" onclick="switchTab('local')">
+        📂 Local Folder Sorter &amp; Library
+      </button>
+    </nav>
+
+    <!-- Main Card -->
+    <section class="glass-card" aria-label="Downloader Card">
+      <!-- Single Video Pane -->
+      <div id="paneSingle" class="tab-pane">
+        <label for="singleUrlInput" style="font-weight: 600; font-size: 0.92rem;">Video or Song Link</label>
+        <div class="url-wrapper">
+          <div class="url-icon">🔗</div>
+          <input 
+            type="url" 
+            id="singleUrlInput" 
+            class="url-input" 
+            placeholder="Paste video or song link (YouTube, YouTube Music, X, TikTok, Direct MP4/MP3...)" 
+            autocomplete="off"
+          >
+          <button type="button" id="btnSinglePaste" class="btn-paste">Paste</button>
+        </div>
+
+        <div class="quality-selector" role="radiogroup" aria-label="Quality">
+          <span style="font-size: 0.85rem; color: var(--text-dim);">Format &amp; Size:</span>
+          <div class="quality-chip audio-highlight active" data-quality="m4a" title="Uses the native M4A stream when available">🎵 M4A Native <span class="size-tag">Source quality</span></div>
+          <div class="quality-chip audio-highlight" data-quality="mp3-opt" title="Variable bitrate MP3 conversion; output size depends on the source">🎵 MP3 Optimized</div>
+          <div class="quality-chip audio-highlight" data-quality="mp3-max" title="High bitrate MP3 conversion; source quality still matters">🎧 MP3 Max <span class="size-tag">High bitrate</span></div>
+          <div class="quality-chip" data-quality="best" title="Best available video up to 1080p">🎬 Up to 1080p</div>
+          <div class="quality-chip compress-highlight" data-quality="best-compressed" title="Prefers smaller available video streams up to 1080p; size varies by source">🗜️ 1080p Smaller <span class="size-tag">Size varies</span></div>
+          <div class="quality-chip" data-quality="720p" title="720p HD (Fast & Compact)">⚡ 720p HD</div>
+          <div class="quality-chip" data-quality="4k" title="Maximum 4K Quality">✨ 4K / Max</div>
+          <div class="quality-chip" data-quality="480p">480p SD</div>
+        </div>
+
+        <button type="button" id="btnSingleDownload" class="btn-download">
+          <span id="singleBtnText">Download Media</span>
+        </button>
+      </div>
+
+      <!-- Bulk / Link Inspector Pane -->
+      <div id="paneBulk" class="tab-pane active">
+        <label for="bulkUrlInput" style="font-weight: 600; font-size: 0.92rem;">YouTube Music, Playlist, Album, or Channel URL</label>
+        <div class="fetch-wrapper">
+          <div class="url-wrapper">
+            <div class="url-icon">🔍</div>
+            <input 
+              type="url" 
+              id="bulkUrlInput" 
+              class="url-input" 
+              placeholder="Paste a playlist URL; add more in the multi-link box below" 
+              autocomplete="off"
+            >
+            <button type="button" id="btnBulkPaste" class="btn-paste">Paste</button>
+          </div>
+          <button type="button" id="btnFetchLinks" class="btn-fetch">
+            <span id="fetchBtnText">Fetch Playlist(s)</span>
+          </button>
+        </div>
+
+        <button type="button" id="btnToggleManualText" class="text-links-toggle">
+          + Add multiple playlist URLs or direct video URLs
+        </button>
+        <textarea id="manualLinksArea" class="text-links-area" placeholder="Paste up to 20 URLs, one per line. Playlist and album links are expanded and combined into one selectable list.&#10;https://music.youtube.com/playlist?list=...&#10;https://youtube.com/playlist?list=..."></textarea>
+
+        <!-- Playlist Header Banner (YouTube Music style) -->
+        <div id="playlistBanner" class="playlist-banner">
+          <img id="playlistCover" class="playlist-cover" src="" alt="Cover Artwork" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\' fill=\'%231e293b\'><rect width=\'90\' height=\'90\'/><text x=\'50%\' y=\'50%\' fill=\'%2364748b\' font-size=\'24\' text-anchor=\'middle\' dy=\'.3em\'>🎵</text></svg>'">
+          <div class="playlist-details">
+            <span class="playlist-tag">Collection / Playlist</span>
+            <h2 id="playlistTitle" class="playlist-name">Japanese Song</h2>
+            <div class="playlist-meta">
+              <span id="playlistAuthorBadge">👤 <b id="playlistAuthor">Mr bigpao</b></span>
+              <span class="track-dot">&bull;</span>
+              <span id="playlistTracksCount">325 tracks</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tracks Container -->
+        <div id="tracksContainer" class="tracks-container">
+          <!-- Toolbar & Filter -->
+          <div class="results-toolbar">
+            <div class="filter-wrapper">
+              <span class="filter-icon">🔍</span>
+              <input type="text" id="trackFilterInput" class="filter-input" placeholder="Filter songs by title, artist, or album...">
+            </div>
+            <div class="selection-controls">
+              <span id="resultsCountBadge" class="count-badge">0 / 0 Selected</span>
+              <button type="button" id="btnSelectAll" class="btn-action-small">Select All</button>
+              <button type="button" id="btnDeselectAll" class="btn-action-small">Deselect All</button>
+            </div>
+          </div>
+
+          <!-- Popularity Ranking & Sorting Toolbar -->
+          <div class="sorting-toolbar">
+            <div class="sort-group">
+              <span class="sort-label">Sort:</span>
+              <button type="button" id="btnSortPopular" class="btn-sort active" title="Sort by Total Views / Popularity Rank">🔥 Most Listened</button>
+              <button type="button" id="btnSortOriginal" class="btn-sort" title="Sort by Original Playlist Order">🎵 Original Order</button>
+              <button type="button" id="btnSortDuration" class="btn-sort" title="Sort by Track Duration">⏱️ Duration</button>
+              <button type="button" id="btnSortTitle" class="btn-sort" title="Sort by Song Title">🔤 Title</button>
+            </div>
+            <div class="quick-filter-group">
+              <span class="sort-label">Select:</span>
+              <button type="button" id="btnSelectTop10" class="btn-quick-filter highlight" title="Select Top 10 Most Listened Tracks">🏆 Top 10</button>
+              <button type="button" id="btnSelectTop25" class="btn-quick-filter highlight" title="Select Top 25 Most Listened Tracks">Top 25</button>
+              <button type="button" id="btnSelectTop50" class="btn-quick-filter highlight" title="Select Top 50 Most Listened Tracks">Top 50</button>
+              <button type="button" id="btnFetchAllViews" class="btn-quick-filter" title="Fetch / Refresh live play counts from YouTube Music">⚡ Refresh Plays</button>
+            </div>
+          </div>
+
+          <!-- The Song Cards List -->
+          <div id="linksList" class="tracks-list"></div>
+
+          <!-- Popularity Rank File Naming Checkbox -->
+          <label class="rank-checkbox-label" title="Prefix downloaded file names with popularity rank number (e.g. 01. [Rank #1] Song.m4a)">
+            <input type="checkbox" id="chkNumberByRank">
+            <span>🏆 Number downloaded files by popularity rank (e.g. <code>01. [Rank #1] Song.m4a</code>)</span>
+          </label>
+
+          <!-- Format / Quality Selector -->
+          <div class="quality-selector" role="radiogroup" aria-label="Bulk Quality">
+            <span style="font-size: 0.85rem; color: var(--text-dim);">Download Format &amp; Size:</span>
+            <div class="quality-chip audio-highlight active" data-quality="m4a" title="Uses the native M4A stream when available">🎵 M4A Native <span class="size-tag">Source quality</span></div>
+            <div class="quality-chip audio-highlight" data-quality="mp3-opt" title="Variable bitrate MP3 conversion; output size depends on the source">🎵 MP3 Optimized</div>
+            <div class="quality-chip audio-highlight" data-quality="mp3-max" title="High bitrate MP3 conversion; source quality still matters">🎧 MP3 Max <span class="size-tag">High bitrate</span></div>
+            <div class="quality-chip" data-quality="best" title="Best available video up to 1080p">🎬 Up to 1080p Video</div>
+            <div class="quality-chip compress-highlight" data-quality="best-compressed" title="Prefers smaller available video streams up to 1080p; size varies by source">🗜️ 1080p Smaller <span class="size-tag">Size varies</span></div>
+            <div class="quality-chip" data-quality="720p" title="Fastest Video">⚡ 720p HD</div>
+            <div class="quality-chip" data-quality="4k" title="Maximum Quality">✨ 4K / Max</div>
+            <div class="quality-chip" data-quality="480p">480p SD</div>
+          </div>
+
+          <!-- Action Button -->
+          <button type="button" id="btnBulkDownload" class="btn-download">
+            <span id="bulkBtnText">⚡ Bulk Download Selected Tracks</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Local Folder Sorter & Library Pane -->
+      <div id="paneLocal" class="tab-pane">
+        <!-- Target Folder Selector Row -->
+        <label for="localDirInput" style="font-weight: 600; font-size: 0.92rem;">Local Music or Album Folder on Disk</label>
+        <div class="local-folder-row">
+          <div class="url-wrapper" style="flex: 1;">
+            <div class="url-icon">📂</div>
+            <input 
+              type="text" 
+              id="localDirInput" 
+              class="url-input" 
+              placeholder="Paste or browse local folder (e.g. D:\Music\Artist, C:\Users\YourName\Music)" 
+              spellcheck="false"
+              autocomplete="off"
+            >
+            <button type="button" id="btnLocalBrowse" class="btn-action-small" title="Choose folder in File Explorer">Browse...</button>
+          </div>
+          <button type="button" id="btnScanLocalFolder" class="btn-fetch">
+            <span id="scanBtnText">⚡ Scan &amp; Rank Folder</span>
+          </button>
+        </div>
+
+        <!-- Folder Summary Banner (J-Pop / Album Style) -->
+        <div id="localSummaryBanner" class="playlist-banner" style="display: none;">
+          <img id="localFolderCover" class="playlist-cover" src="" alt="Album Artwork" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\' fill=\'%231e293b\'><rect width=\'90\' height=\'90\'/><text x=\'50%\' y=\'50%\' fill=\'%2364748b\' font-size=\'28\' text-anchor=\'middle\' dy=\'.3em\'>🇯🇵</text></svg>'">
+          <div class="playlist-details">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span class="playlist-tag">Local Music Library</span>
+              <span id="localFolderDiskBadge" class="count-badge" style="font-size: 0.72rem;">Disk Synced</span>
+            </div>
+            <h2 id="localFolderName" class="playlist-name">Back Number</h2>
+            <div class="playlist-meta">
+              <span id="localTotalSongsBadge">🎵 <b id="localTotalSongs">0 tracks</b></span>
+              <span class="track-dot">&bull;</span>
+              <span id="localTotalPlaysBadge" style="color: #fbbf24;">🔥 <b id="localTotalPlays">0 plays combined</b></span>
+              <span class="track-dot">&bull;</span>
+              <span id="localTopTrackBadge" style="color: #38bdf8;">🏆 Top #1: <b id="localTopTrackName">--</b></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reorder & Sorter Controls Container -->
+        <div id="localControlsContainer" class="tracks-container" style="display: none;">
+          <!-- Disk Action Bar: Safe two-pass rename directly on disk -->
+          <div class="disk-actions-card">
+            <div class="disk-actions-info">
+              <div style="font-weight: 700; font-size: 0.95rem; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                <span>⚙️</span>
+                <span>Disk File Renaming &amp; Numbering:</span>
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">
+                Re-numbers audio files on disk (e.g. <code>01. [Rank #1] Song.m4a</code>) so Windows Explorer, car stereos, and phones sort songs by popularity automatically.
+              </div>
+            </div>
+            <div class="disk-actions-buttons">
+              <button type="button" id="btnApplyRankPrefix" class="btn-disk-action primary" title="Rename files on disk with popularity rank prefix">
+                🏆 Rename Files by Popularity Rank
+              </button>
+              <button type="button" id="btnRemoveRankPrefix" class="btn-disk-action secondary" title="Revert filenames back to clean name without rank prefix">
+                ↩️ Clean Rank Prefix
+              </button>
+              <button type="button" id="btnOpenLocalExplorer" class="btn-disk-action" title="Open this folder in Windows Explorer">
+                📁 Open in Explorer
+              </button>
+            </div>
+          </div>
+
+          <!-- Sorter & Filter Toolbar -->
+          <div class="results-toolbar">
+            <div class="filter-wrapper">
+              <span class="filter-icon">🔍</span>
+              <input type="text" id="localTrackFilterInput" class="filter-input" placeholder="Search local songs by title, artist, ID...">
+            </div>
+            <div class="selection-controls">
+              <span id="localCountBadge" class="count-badge">0 tracks</span>
+              <button type="button" id="btnRefreshLocalViews" class="btn-action-small" title="Re-query YouTube Music for latest play counts">🔄 Refresh Plays</button>
+            </div>
+          </div>
+
+          <!-- Sorting Toolbar -->
+          <div class="sorting-toolbar">
+            <div class="sort-group">
+              <span class="sort-label">Sort:</span>
+              <button type="button" id="btnLocalSortPopular" class="btn-sort active" title="Sort by Most Listened (Popularity Rank 1..N)">🔥 Most Listened</button>
+              <button type="button" id="btnLocalSortTitle" class="btn-sort" title="Sort Alphabetically by Title">🔤 Title (A-Z)</button>
+              <button type="button" id="btnLocalSortSize" class="btn-sort" title="Sort by File Size">💾 File Size</button>
+              <button type="button" id="btnLocalSortDate" class="btn-sort" title="Sort by Date Modified">📅 Date Modified</button>
+              <button type="button" id="btnLocalSortFilename" class="btn-sort" title="Sort by Exact Filename on Disk">🎵 Filename</button>
+            </div>
+          </div>
+
+          <!-- Rename Result Notification Banner -->
+          <div id="localAlertBanner" class="alert-banner" style="display: none;">
+            <span id="localAlertMsg"></span>
+          </div>
+
+          <!-- Scanned Song Cards List -->
+          <div id="localTracksList" class="tracks-list" style="max-height: 520px;"></div>
+        </div>
+      </div>
+
+      <!-- Active Download Card ("Now Downloading") -->
+      <div id="activeDownloadCard" class="active-download-card">
+        <img id="activeThumb" class="active-thumb" src="" alt="" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'54\' height=\'54\' fill=\'%231e293b\'><rect width=\'54\' height=\'54\'/><text x=\'50%\' y=\'50%\' fill=\'%2364748b\' font-size=\'18\' text-anchor=\'middle\' dy=\'.3em\'>⚡</text></svg>'">
+        <div class="active-info">
+          <div id="activeTitle" class="active-title">Downloading media...</div>
+          <div id="activeArtist" class="active-artist">--</div>
+        </div>
+        <div id="activeTrackNumber" class="count-badge">1 / 1</div>
+        <button type="button" id="btnStopActiveDownload" class="btn-stop-icon" title="Stop and cancel download immediately">⏹️ Stop</button>
+      </div>
+
+      <!-- Notification Banner -->
+      <div id="alertBanner" class="alert-banner">
+        <span id="alertMsg"></span>
+        <button type="button" id="btnResumeDownload" class="btn-resume" style="display: none;">🔄 Resume Download</button>
+        <button type="button" id="btnAlertOpenFolder" class="btn-action-small" style="display: none;">Open Folder</button>
+      </div>
+
+      <!-- Live Progress Section -->
+      <div id="progressSection" class="progress-section">
+        <div class="progress-header">
+          <div class="progress-title">
+            <span id="statusIcon">⚡</span>
+            <span id="statusLabel">Downloading...</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div id="progressPercent" class="progress-percent">0%</div>
+            <button type="button" id="btnStopProgressDownload" class="btn-stop-pill" title="Stop and cancel download immediately">⏹️ Stop</button>
+          </div>
+        </div>
+
+        <div class="progress-bar-bg">
+          <div id="progressBarFill" class="progress-bar-fill"></div>
+        </div>
+
+        <div class="progress-meta">
+          <span id="metaSpeed">Speed: --</span>
+          <span id="metaSize">Size: --</span>
+          <span id="metaEta">ETA: --</span>
+        </div>
+
+        <button type="button" id="btnToggleLogs" class="logs-toggle">
+          Show Terminal Logs &blacktriangledown;
+        </button>
+        <div id="logsDrawer" class="logs-drawer"></div>
+      </div>
+    </section>
+
+    <!-- Recent Downloads History Card -->
+    <section class="history-card" aria-label="Recent Downloads">
+      <div class="history-header">
+        <strong style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+          📁 <span id="historyDirDisplay">Recent Downloads</span>
+        </strong>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btnRefreshHistory" class="btn-action-small" title="Refresh files list">
+            🔄 Refresh
+          </button>
+          <button type="button" id="btnOpenFolder" class="btn-action-small">
+            Open in Explorer
+          </button>
+        </div>
+      </div>
+      <div id="fileList" class="file-list">
+        <div class="empty-state">Loading downloaded files...</div>
+      </div>
+    </section>
+
+    <footer style="text-align: center; font-size: 0.82rem; color: var(--text-dim); margin-top: -6px;">
+      Works with sites supported by your installed yt-dlp; available formats vary by source.
+      <div class="sites-pills">
+        <span class="site-pill">Album Artwork</span>
+        <span class="site-pill">Artist / Author Tags</span>
+        <span class="site-pill">MP3 Audio Extraction</span>
+        <span class="site-pill">Video up to 1080p</span>
+        <span class="site-pill">Fragment-Concurrent Downloads</span>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    let activeTab = "bulk";
+    let selectedQuality = "m4a";
+    let extractedTracks = [];
+    let completedTrackUrls = new Set();
+    let isProcessing = false;
+    let activeSessionId = null;
+    let currentReader = null;
+
+    // Folder selection state
+    let currentDownloadDir = localStorage.getItem("downloadDir") || "";
+    let systemPresets = {};
+
+    const customDirInput = document.getElementById("customDirInput");
+    const btnBrowseFolder = document.getElementById("btnBrowseFolder");
+    const btnRevealFolder = document.getElementById("btnRevealFolder");
+    const btnApplyPath = document.getElementById("btnApplyPath");
+    const folderStatusBadge = document.getElementById("folderStatusBadge");
+    const historyDirDisplay = document.getElementById("historyDirDisplay");
+    const btnRefreshHistory = document.getElementById("btnRefreshHistory");
+
+    const singleUrlInput = document.getElementById("singleUrlInput");
+    const bulkUrlInput = document.getElementById("bulkUrlInput");
+    const manualLinksArea = document.getElementById("manualLinksArea");
+    const btnSingleDownload = document.getElementById("btnSingleDownload");
+    const btnFetchLinks = document.getElementById("btnFetchLinks");
+    const btnBulkDownload = document.getElementById("btnBulkDownload");
+
+    const playlistBanner = document.getElementById("playlistBanner");
+    const playlistCover = document.getElementById("playlistCover");
+    const playlistTitle = document.getElementById("playlistTitle");
+    const playlistAuthor = document.getElementById("playlistAuthor");
+    const playlistTracksCount = document.getElementById("playlistTracksCount");
+
+    const tracksContainer = document.getElementById("tracksContainer");
+    const linksList = document.getElementById("linksList");
+    const resultsCountBadge = document.getElementById("resultsCountBadge");
+    const trackFilterInput = document.getElementById("trackFilterInput");
+
+    const activeDownloadCard = document.getElementById("activeDownloadCard");
+    const activeThumb = document.getElementById("activeThumb");
+    const activeTitle = document.getElementById("activeTitle");
+    const activeArtist = document.getElementById("activeArtist");
+    const activeTrackNumber = document.getElementById("activeTrackNumber");
+    const btnStopActiveDownload = document.getElementById("btnStopActiveDownload");
+
+    const progressSection = document.getElementById("progressSection");
+    const progressBarFill = document.getElementById("progressBarFill");
+    const progressPercent = document.getElementById("progressPercent");
+    const statusLabel = document.getElementById("statusLabel");
+    const statusIcon = document.getElementById("statusIcon");
+    const metaSpeed = document.getElementById("metaSpeed");
+    const metaSize = document.getElementById("metaSize");
+    const metaEta = document.getElementById("metaEta");
+    const logsDrawer = document.getElementById("logsDrawer");
+    const alertBanner = document.getElementById("alertBanner");
+    const alertMsg = document.getElementById("alertMsg");
+    const btnResumeDownload = document.getElementById("btnResumeDownload");
+    const btnAlertOpenFolder = document.getElementById("btnAlertOpenFolder");
+    const btnStopProgressDownload = document.getElementById("btnStopProgressDownload");
+
+    // Tab Switching Functionality
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+
+      if (tab === "single") {
+        document.getElementById("tabSingle")?.classList.add("active");
+        document.getElementById("paneSingle")?.classList.add("active");
+      } else if (tab === "bulk") {
+        document.getElementById("tabBulk")?.classList.add("active");
+        document.getElementById("paneBulk")?.classList.add("active");
+      } else if (tab === "local") {
+        document.getElementById("tabLocal")?.classList.add("active");
+        document.getElementById("paneLocal")?.classList.add("active");
+        const dirInp = document.getElementById("localDirInput");
+        if (dirInp && !dirInp.value) {
+          dirInp.value = currentDownloadDir;
+        }
+        if (!localTracks || localTracks.length === 0 || (localFolder && localFolder !== (dirInp?.value || currentDownloadDir))) {
+          scanLocalFolder(dirInp?.value || currentDownloadDir);
+        }
+      }
+    }
+    window.switchTab = switchTab;
+
+    let modalPickerTarget = "destination"; // "destination" or "local"
+
+    // Folder Management
+    function updateFolderUI(path) {
+      if (!path) return;
+      currentDownloadDir = path;
+      localStorage.setItem("downloadDir", path);
+      if (customDirInput) customDirInput.value = path;
+      const localInp = document.getElementById("localDirInput");
+      if (localInp && !localInp.value) localInp.value = path;
+      if (historyDirDisplay) {
+        historyDirDisplay.textContent = `Recent Downloads in ${path}`;
+        historyDirDisplay.title = path;
+      }
+      // Highlight matching preset chip
+      document.querySelectorAll(".preset-chip").forEach(chip => {
+        const key = chip.getAttribute("data-preset");
+        const presetPath = systemPresets[key];
+        const isMatch = presetPath && (presetPath.toLowerCase() === path.toLowerCase());
+        chip.classList.toggle("active", Boolean(isMatch));
+      });
+    }
+
+    function setDownloadDir(path, badgeMsg = "Folder Active") {
+      const trimmed = (path || "").trim();
+      if (!trimmed) return;
+      updateFolderUI(trimmed);
+      if (folderStatusBadge) {
+        folderStatusBadge.textContent = "✓ " + badgeMsg;
+        folderStatusBadge.style.color = "#34d399";
+        setTimeout(() => {
+          if (folderStatusBadge) {
+            folderStatusBadge.textContent = "Active Location";
+            folderStatusBadge.style.color = "";
+          }
+        }, 3000);
+      }
+      refreshHistory(trimmed);
+    }
+
+    // File Explorer Modal Elements
+    let modalCurrentPath = currentDownloadDir;
+    const explorerModal = document.getElementById("explorerModal");
+    const btnCloseModal = document.getElementById("btnCloseModal");
+    const btnCancelModal = document.getElementById("btnCancelModal");
+    const btnNavUp = document.getElementById("btnNavUp");
+    const modalPathInput = document.getElementById("modalPathInput");
+    const btnModalGo = document.getElementById("btnModalGo");
+    const btnModalOpenExplorer = document.getElementById("btnModalOpenExplorer");
+    const modalDrivesList = document.getElementById("modalDrivesList");
+    const modalCurrentFolderName = document.getElementById("modalCurrentFolderName");
+    const modalFoldersGrid = document.getElementById("modalFoldersGrid");
+    const newFolderNameInput = document.getElementById("newFolderNameInput");
+    const btnCreateNewFolder = document.getElementById("btnCreateNewFolder");
+    const btnConfirmSelectFolder = document.getElementById("btnConfirmSelectFolder");
+    const btnLaunchNativePicker = document.getElementById("btnLaunchNativePicker");
+
+    // Open & Close In-Browser Folder Browser Modal
+    function openExplorerModal() {
+      explorerModal.style.display = "flex";
+      loadFolderBrowser(currentDownloadDir);
+    }
+
+    function closeExplorerModal() {
+      explorerModal.style.display = "none";
+    }
+
+    btnCloseModal.addEventListener("click", closeExplorerModal);
+    btnCancelModal.addEventListener("click", closeExplorerModal);
+    explorerModal.addEventListener("click", (e) => {
+      if (e.target === explorerModal) closeExplorerModal();
+    });
+
+    // Load directory in modal
+    async function loadFolderBrowser(targetPath) {
+      modalFoldersGrid.innerHTML = `<div class="empty-state"><span class="spinner"></span> Loading folders...</div>`;
+      try {
+        const res = await fetch("/api/browse-dir", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: targetPath })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          modalFoldersGrid.innerHTML = `<div class="empty-state" style="color: #f87171;">Cannot read directory: ${escapeHtml(data.error || "Permission denied")}</div>`;
+          return;
+        }
+
+        modalCurrentPath = data.current;
+        modalPathInput.value = data.current;
+        const leaf = data.current.replace(/[\/\\]+$/, "").split(/[\/\\]/).pop() || data.current;
+        modalCurrentFolderName.textContent = leaf;
+
+        btnNavUp.disabled = !data.parent;
+        btnNavUp.onclick = () => { if (data.parent) loadFolderBrowser(data.parent); };
+
+        // Render drive and preset chips
+        const chips = [];
+        const addChip = (label, path, active = false) => {
+          if (!path) return;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `modal-chip${active ? " active" : ""}`;
+          button.textContent = label;
+          button.addEventListener("click", () => loadFolderBrowser(path));
+          chips.push(button);
+        };
+        if (data.drives && data.drives.length > 0) {
+          data.drives.forEach(d => {
+            addChip(`💾 ${d}`, d, modalCurrentPath.toLowerCase().startsWith(d.toLowerCase()));
+          });
+        }
+        if (data.presets) {
+          addChip("📁 Videos", data.presets.videos);
+          addChip("🎵 Music", data.presets.music);
+          addChip("📥 Downloads", data.presets.downloads);
+          addChip("💻 Desktop", data.presets.desktop);
+        }
+        modalDrivesList.replaceChildren(...chips);
+
+        // Render subfolders
+        if (!data.subdirs || data.subdirs.length === 0) {
+          modalFoldersGrid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">No subfolders inside this directory. Click "Select This Folder" below to save here!</div>`;
+          return;
+        }
+
+        const folderItems = data.subdirs.map(sub => {
+          const fullSub = `${data.current.replace(/[\/\\]+$/, "")}\\${sub}`;
+          const item = document.createElement("div");
+          item.className = "folder-grid-item";
+          item.title = fullSub;
+          item.tabIndex = 0;
+          item.setAttribute("role", "button");
+          const icon = document.createElement("span");
+          icon.className = "f-icon";
+          icon.textContent = "📁";
+          const name = document.createElement("span");
+          name.className = "f-name";
+          name.textContent = sub;
+          item.append(icon, name);
+          item.addEventListener("click", () => loadFolderBrowser(fullSub));
+          item.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              loadFolderBrowser(fullSub);
+            }
+          });
+          return item;
+        });
+        modalFoldersGrid.replaceChildren(...folderItems);
+      } catch (err) {
+        modalFoldersGrid.innerHTML = `<div class="empty-state" style="color: #f87171;">Failed to load folders: ${escapeHtml(String(err))}</div>`;
+      }
+    }
+
+    btnModalGo.addEventListener("click", () => {
+      const p = modalPathInput.value.trim();
+      if (p) loadFolderBrowser(p);
+    });
+    modalPathInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const p = modalPathInput.value.trim();
+        if (p) loadFolderBrowser(p);
+      }
+    });
+
+    btnModalOpenExplorer.addEventListener("click", () => openFolder(modalCurrentPath));
+
+    // Create New Folder inside modal
+    btnCreateNewFolder.addEventListener("click", async () => {
+      const name = newFolderNameInput.value.trim();
+      if (!name) return;
+      try {
+        const res = await fetch("/api/create-dir", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ parent: modalCurrentPath, name })
+        });
+        const data = await res.json();
+        if (data.success && data.path) {
+          newFolderNameInput.value = "";
+          loadFolderBrowser(data.path);
+        }
+      } catch {}
+    });
+
+    // Confirm Folder Selection
+    btnConfirmSelectFolder.addEventListener("click", () => {
+      if (modalPickerTarget === "local") {
+        const localInp = document.getElementById("localDirInput");
+        if (localInp) localInp.value = modalCurrentPath;
+        scanLocalFolder(modalCurrentPath);
+      } else {
+        setDownloadDir(modalCurrentPath, "Folder Selected");
+      }
+      closeExplorerModal();
+    });
+
+    // Native OS Picker Handler (with safe timeout)
+    async function launchNativeWindowsPicker() {
+      const btnText = document.getElementById("nativePickerBtnText");
+      if (btnText) btnText.innerHTML = `<span class="spinner"></span> Opening Windows Dialog...`;
+      btnLaunchNativePicker.disabled = true;
+
+      const ac = new AbortController();
+      const timeoutId = setTimeout(() => ac.abort(), 20000); // 20s timeout
+
+      try {
+        const res = await fetch("/api/select-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentDir: modalCurrentPath || currentDownloadDir }),
+          signal: ac.signal
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (data.success && data.folder) {
+          if (modalPickerTarget === "local") {
+            const localInp = document.getElementById("localDirInput");
+            if (localInp) localInp.value = data.folder;
+            scanLocalFolder(data.folder);
+          } else {
+            setDownloadDir(data.folder, "Folder Selected");
+          }
+          closeExplorerModal();
+        }
+      } catch (err) {
+        console.warn("Native picker timeout/fallback:", err);
+      } finally {
+        if (btnText) btnText.textContent = "🪟 Windows OS Dialog";
+        btnLaunchNativePicker.disabled = false;
+      }
+    }
+
+    btnLaunchNativePicker.addEventListener("click", launchNativeWindowsPicker);
+
+    // Browse Folder on Main Bar opens Modal instantly
+    btnBrowseFolder.addEventListener("click", () => {
+      modalPickerTarget = "destination";
+      openExplorerModal();
+    });
+
+    // Open / Reveal Folder
+    async function openFolder(folder) {
+      const target = folder || currentDownloadDir;
+      try {
+        await fetch("/api/open-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dir: target })
+        });
+      } catch {}
+    }
+
+    document.getElementById("btnOpenFolder").addEventListener("click", () => openFolder(currentDownloadDir));
+    btnAlertOpenFolder.addEventListener("click", () => openFolder(currentDownloadDir));
+    btnRevealFolder.addEventListener("click", () => openFolder(currentDownloadDir));
+    btnRefreshHistory.addEventListener("click", () => refreshHistory(currentDownloadDir));
+
+    // ==========================================
+    // Local Folder Library & Sorter Controller
+    // ==========================================
+    let localTracks = [];
+    let localFolder = "";
+    let localCurrentSort = "popular";
+    let isScanningLocal = false;
+
+    const localDirInput = document.getElementById("localDirInput");
+    const btnScanLocalFolder = document.getElementById("btnScanLocalFolder");
+    const scanBtnText = document.getElementById("scanBtnText");
+    const btnLocalBrowse = document.getElementById("btnLocalBrowse");
+    const btnQuickScanFolder = document.getElementById("btnQuickScanFolder");
+
+    const localSummaryBanner = document.getElementById("localSummaryBanner");
+    const localFolderCover = document.getElementById("localFolderCover");
+    const localFolderName = document.getElementById("localFolderName");
+    const localTotalSongs = document.getElementById("localTotalSongs");
+    const localTotalPlays = document.getElementById("localTotalPlays");
+    const localTopTrackName = document.getElementById("localTopTrackName");
+    const localControlsContainer = document.getElementById("localControlsContainer");
+
+    const btnApplyRankPrefix = document.getElementById("btnApplyRankPrefix");
+    const btnRemoveRankPrefix = document.getElementById("btnRemoveRankPrefix");
+    const btnOpenLocalExplorer = document.getElementById("btnOpenLocalExplorer");
+    const localTrackFilterInput = document.getElementById("localTrackFilterInput");
+    const localCountBadge = document.getElementById("localCountBadge");
+    const btnRefreshLocalViews = document.getElementById("btnRefreshLocalViews");
+    const localAlertBanner = document.getElementById("localAlertBanner");
+    const localAlertMsg = document.getElementById("localAlertMsg");
+    const localTracksList = document.getElementById("localTracksList");
+
+    const btnLocalSortPopular = document.getElementById("btnLocalSortPopular");
+    const btnLocalSortTitle = document.getElementById("btnLocalSortTitle");
+    const btnLocalSortSize = document.getElementById("btnLocalSortSize");
+    const btnLocalSortDate = document.getElementById("btnLocalSortDate");
+    const btnLocalSortFilename = document.getElementById("btnLocalSortFilename");
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // Browse local folder button
+    if (btnLocalBrowse) {
+      btnLocalBrowse.addEventListener("click", () => {
+        modalPickerTarget = "local";
+        openExplorerModal();
+      });
+    }
+
+    // Quick Scan Button on top destination bar
+    if (btnQuickScanFolder) {
+      btnQuickScanFolder.addEventListener("click", () => {
+        switchTab("local");
+        if (localDirInput) localDirInput.value = currentDownloadDir;
+        scanLocalFolder(currentDownloadDir);
+      });
+    }
+
+    // Scan Local Folder
+    async function scanLocalFolder(targetDir, skipViews = false) {
+      const raw = targetDir || (localDirInput ? localDirInput.value : "") || currentDownloadDir;
+      const dir = (raw || "").replace(/^["']|["']$/g, "").trim();
+      if (!dir) return;
+
+      if (isScanningLocal) return;
+      isScanningLocal = true;
+
+      if (localDirInput) localDirInput.value = dir;
+      if (btnScanLocalFolder) btnScanLocalFolder.disabled = true;
+      if (scanBtnText) scanBtnText.innerHTML = `<span class="spinner"></span> Scanning &amp; Ranking...`;
+      if (localAlertBanner) localAlertBanner.style.display = "none";
+
+      try {
+        const res = await fetch("/api/scan-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dir, skipViews })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          if (localAlertBanner) {
+            localAlertBanner.className = "alert-banner error";
+            localAlertBanner.style.display = "flex";
+            localAlertMsg.textContent = `Cannot scan directory: ${data.error || "Failed"}`;
+          }
+          return;
+        }
+
+        localFolder = data.folder;
+        localTracks = data.tracks || [];
+
+        // Extract clean folder name
+        const cleanNorm = data.folder.replace(/[\/\\]+$/, "");
+        const folderLeaf = cleanNorm.split(/[\/\\]/).pop() || data.folder;
+
+        if (localFolderName) localFolderName.textContent = folderLeaf;
+        if (localTotalSongs) localTotalSongs.textContent = `${data.count} tracks`;
+        if (localTotalPlays) {
+          localTotalPlays.textContent = data.totalViewsFormatted
+            ? `${data.totalViewsFormatted} combined`
+            : (data.totalViews > 0 ? `${data.totalViews.toLocaleString()} plays combined` : 'Popularity ranked');
+        }
+        if (localTopTrackName) {
+          if (data.topTrack) {
+            const playStr = data.topTrack.viewCountFormatted ? ` (${data.topTrack.viewCountFormatted})` : '';
+            localTopTrackName.textContent = `${data.topTrack.cleanTitle}${playStr}`;
+          } else {
+            localTopTrackName.textContent = "--";
+          }
+        }
+
+        if (localFolderCover) {
+          const coverUrl = (data.topTrack && data.topTrack.thumbnail)
+            ? data.topTrack.thumbnail
+            : (localTracks.length > 0 && localTracks[0].thumbnail ? localTracks[0].thumbnail : '');
+          if (coverUrl) {
+            localFolderCover.src = coverUrl;
+          }
+        }
+
+        if (localSummaryBanner) localSummaryBanner.style.display = "flex";
+        if (localControlsContainer) localControlsContainer.style.display = "flex";
+
+        renderLocalTracks();
+      } catch (err) {
+        if (localAlertBanner) {
+          localAlertBanner.className = "alert-banner error";
+          localAlertBanner.style.display = "flex";
+          localAlertMsg.textContent = `Error scanning folder: ${String(err)}`;
+        }
+      } finally {
+        isScanningLocal = false;
+        if (btnScanLocalFolder) btnScanLocalFolder.disabled = false;
+        if (scanBtnText) scanBtnText.textContent = "⚡ Scan & Rank Folder";
+      }
+    }
+
+    if (btnScanLocalFolder) {
+      btnScanLocalFolder.addEventListener("click", () => scanLocalFolder(localDirInput?.value));
+    }
+    if (localDirInput) {
+      localDirInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") scanLocalFolder(localDirInput.value);
+      });
+    }
+
+    // Filter & Sort Local Tracks
+    function getSortedAndFilteredLocalTracks() {
+      const q = (localTrackFilterInput ? localTrackFilterInput.value : "").trim().toLowerCase();
+      let list = localTracks;
+      if (q) {
+        list = localTracks.filter(t =>
+          (t.cleanTitle && t.cleanTitle.toLowerCase().includes(q)) ||
+          (t.filename && t.filename.toLowerCase().includes(q)) ||
+          (t.id && t.id.toLowerCase().includes(q)) ||
+          (t.author && t.author.toLowerCase().includes(q))
+        );
+      }
+
+      const copy = [...list];
+      if (localCurrentSort === "popular") {
+        copy.sort((a, b) => {
+          const vA = a.viewCount || 0;
+          const vB = b.viewCount || 0;
+          if (vA !== vB) return vB - vA;
+          const rA = a.rank || a.existingRank || 9999;
+          const rB = b.rank || b.existingRank || 9999;
+          return rA - rB;
+        });
+      } else if (localCurrentSort === "title") {
+        copy.sort((a, b) => (a.cleanTitle || "").localeCompare(b.cleanTitle || "", undefined, { sensitivity: "base" }));
+      } else if (localCurrentSort === "size") {
+        copy.sort((a, b) => (b.sizeBytes || 0) - (a.sizeBytes || 0));
+      } else if (localCurrentSort === "date") {
+        copy.sort((a, b) => {
+          const tA = a.mtime ? new Date(a.mtime).getTime() : 0;
+          const tB = b.mtime ? new Date(b.mtime).getTime() : 0;
+          return tB - tA;
+        });
+      } else if (localCurrentSort === "filename") {
+        copy.sort((a, b) => (a.filename || "").localeCompare(b.filename || "", undefined, { numeric: true, sensitivity: "base" }));
+      }
+      return copy;
+    }
+
+    function setLocalSortMode(mode) {
+      localCurrentSort = mode;
+      [btnLocalSortPopular, btnLocalSortTitle, btnLocalSortSize, btnLocalSortDate, btnLocalSortFilename].forEach(b => {
+        if (b) b.classList.remove("active");
+      });
+      if (mode === "popular" && btnLocalSortPopular) btnLocalSortPopular.classList.add("active");
+      else if (mode === "title" && btnLocalSortTitle) btnLocalSortTitle.classList.add("active");
+      else if (mode === "size" && btnLocalSortSize) btnLocalSortSize.classList.add("active");
+      else if (mode === "date" && btnLocalSortDate) btnLocalSortDate.classList.add("active");
+      else if (mode === "filename" && btnLocalSortFilename) btnLocalSortFilename.classList.add("active");
+
+      renderLocalTracks();
+    }
+
+    btnLocalSortPopular?.addEventListener("click", () => setLocalSortMode("popular"));
+    btnLocalSortTitle?.addEventListener("click", () => setLocalSortMode("title"));
+    btnLocalSortSize?.addEventListener("click", () => setLocalSortMode("size"));
+    btnLocalSortDate?.addEventListener("click", () => setLocalSortMode("date"));
+    btnLocalSortFilename?.addEventListener("click", () => setLocalSortMode("filename"));
+
+    if (localTrackFilterInput) {
+      localTrackFilterInput.addEventListener("input", () => renderLocalTracks());
+    }
+
+    if (btnRefreshLocalViews) {
+      btnRefreshLocalViews.addEventListener("click", () => scanLocalFolder(localFolder, false));
+    }
+
+    // Render Local Songs List
+    function renderLocalTracks() {
+      if (!localTracksList) return;
+      const tracks = getSortedAndFilteredLocalTracks();
+
+      if (localCountBadge) {
+        localCountBadge.textContent = `${tracks.length} / ${localTracks.length} tracks`;
+      }
+
+      if (tracks.length === 0) {
+        localTracksList.innerHTML = `<div class="empty-state">No audio tracks found matching filter in this folder.</div>`;
+        return;
+      }
+
+      localTracksList.innerHTML = tracks.map((track) => {
+        const rankNum = Number(track.rank || track.existingRank);
+        let rankHtml = `<span class="rank-badge" title="No rank">--</span>`;
+        if (rankNum) {
+          let badgeClass = "rank-badge";
+          let badgeText = `#${rankNum}`;
+          if (rankNum === 1) {
+            badgeClass += " rank-1";
+            badgeText = "🏆 #1";
+          } else if (rankNum === 2) {
+            badgeClass += " rank-2";
+            badgeText = "🥈 #2";
+          } else if (rankNum === 3) {
+            badgeClass += " rank-3";
+            badgeText = "🥉 #3";
+          } else if (rankNum <= 10) {
+            badgeClass += " rank-top10";
+            badgeText = `⭐ #${rankNum}`;
+          }
+          rankHtml = `<span class="${badgeClass}" title="Popularity Rank #${rankNum}">${badgeText}</span>`;
+        }
+
+        const thumbSrc = escapeHtml(track.thumbnail || `https://i.ytimg.com/vi/${track.id || ''}/hqdefault.jpg`);
+        const playsHtml = track.viewCountFormatted
+          ? `<span class="plays-pill" title="${Number(track.viewCount || 0).toLocaleString()} total plays">🔥 ${escapeHtml(track.viewCountFormatted)}</span>`
+          : (track.existingRank ? `<span class="plays-pill" style="color:#94a3b8; border-color:rgba(255,255,255,0.1);">Popularity #${escapeHtml(track.existingRank)}</span>` : "");
+
+        const safeFilenameParam = escapeHtml(encodeURIComponent(track.filename));
+
+        return `
+          <div class="local-track-card" id="local_track_${escapeHtml(track.id || track.filename)}">
+            ${rankHtml}
+            <img class="track-thumb" src="${thumbSrc}" alt="Cover" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'48\\' height=\\'48\\' fill=\\'%231e293b\\'><rect width=\\'48\\' height=\\'48\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'%2364748b\\' font-size=\\'16\\' text-anchor=\\'middle\\' dy=\\'.3em\\'>🎵</text></svg>'">
+            <div class="track-info">
+              <span class="track-title" title="${escapeHtml(track.cleanTitle)}">${escapeHtml(track.cleanTitle)}</span>
+              <div class="track-meta-line">
+                ${playsHtml}
+                ${track.id ? `<span style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#818cf8; background:rgba(99,102,241,0.12); padding:1px 6px; border-radius:4px;">[${escapeHtml(track.id)}]</span>` : ''}
+                <span class="local-track-filename" title="${escapeHtml(track.filename)}">📄 ${escapeHtml(track.filename)}</span>
+              </div>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--text-dim); flex-shrink:0;">${escapeHtml(track.size)}</span>
+            <button type="button" class="btn-reveal-item" data-filename="${safeFilenameParam}" title="Highlight in Windows Explorer">
+              🔍 Reveal
+            </button>
+          </div>
+        `;
+      }).join("");
+      localTracksList.querySelectorAll(".btn-reveal-item").forEach(button => {
+        button.addEventListener("click", () => revealLocalFile(button.dataset.filename));
+      });
+    }
+
+    // Reorder Folder On Disk
+    async function reorderLocalFolder(action) {
+      if (!localTracks || localTracks.length === 0) return;
+      const btn = action === "apply-rank" ? btnApplyRankPrefix : btnRemoveRankPrefix;
+      const origText = btn ? btn.innerHTML : "";
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Renaming files on disk...`;
+      }
+
+      try {
+        const res = await fetch("/api/reorder-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dir: localFolder || currentDownloadDir,
+            action,
+            tracks: localTracks
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (localAlertBanner) {
+            localAlertBanner.className = "alert-banner success";
+            localAlertBanner.style.display = "flex";
+            localAlertMsg.textContent = `✅ Disk files reordered! ${data.message}`;
+          }
+          // Re-scan folder to show updated filenames on disk
+          await scanLocalFolder(localFolder, false);
+        } else {
+          if (localAlertBanner) {
+            localAlertBanner.className = "alert-banner error";
+            localAlertBanner.style.display = "flex";
+            localAlertMsg.textContent = `Rename failed: ${data.error || "Unknown error"}`;
+          }
+        }
+      } catch (err) {
+        if (localAlertBanner) {
+          localAlertBanner.className = "alert-banner error";
+          localAlertBanner.style.display = "flex";
+          localAlertMsg.textContent = `Error reordering files: ${String(err)}`;
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+        }
+      }
+    }
+
+    if (btnApplyRankPrefix) {
+      btnApplyRankPrefix.addEventListener("click", () => reorderLocalFolder("apply-rank"));
+    }
+    if (btnRemoveRankPrefix) {
+      btnRemoveRankPrefix.addEventListener("click", () => reorderLocalFolder("remove-rank"));
+    }
+    if (btnOpenLocalExplorer) {
+      btnOpenLocalExplorer.addEventListener("click", () => openFolder(localFolder || currentDownloadDir));
+    }
+
+    // Reveal File in Explorer
+    async function revealLocalFile(encodedFilename) {
+      const filename = decodeURIComponent(encodedFilename);
+      try {
+        await fetch("/api/reveal-file", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dir: localFolder || currentDownloadDir, filename })
+        });
+      } catch (err) {
+        console.warn("Reveal error:", err);
+      }
+    }
+    window.revealLocalFile = revealLocalFile;
+
+    // Manual input & preset chips
+    btnApplyPath.addEventListener("click", () => {
+      setDownloadDir(customDirInput.value, "Path Applied");
+    });
+    customDirInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        setDownloadDir(customDirInput.value, "Path Applied");
+      }
+    });
+
+    document.querySelectorAll(".preset-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const key = chip.getAttribute("data-preset");
+        const targetPath = systemPresets[key];
+        if (targetPath) {
+          setDownloadDir(targetPath, "Preset Selected");
+        }
+      });
+    });
+
+    // Refresh Recent Files for current or given directory
+    async function refreshHistory(dir) {
+      const target = dir || currentDownloadDir;
+      try {
+        const res = await fetch(`/api/history?dir=${encodeURIComponent(target)}`);
+        const data = await res.json();
+        const fileList = document.getElementById("fileList");
+        if (!data.files || data.files.length === 0) {
+          fileList.innerHTML = `<div class="empty-state">No downloaded media found in this folder yet.</div>`;
+          return;
+        }
+        fileList.innerHTML = data.files.map(f => `
+          <div class="file-item">
+            <span class="file-name" title="${escapeHtml(f.name)}">🎵 ${escapeHtml(f.name)}</span>
+            <span class="file-size">${escapeHtml(f.size)}</span>
+          </div>
+        `).join("");
+      } catch {}
+    }
+
+    // Initialize System Status and Presets
+    async function initSystem() {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        if (data.systemPresets) {
+          systemPresets = data.systemPresets;
+        }
+        const saved = localStorage.getItem("downloadDir");
+        if (!saved && data.downloadDir) {
+          currentDownloadDir = data.downloadDir;
+        }
+      } catch {}
+      updateFolderUI(currentDownloadDir);
+      refreshHistory(currentDownloadDir);
+    }
+
+    function appendLog(line, type) {
+      const d = document.createElement("div");
+      if (type === "error") d.style.color = "#f87171";
+      else if (type === "info") d.style.color = "#38bdf8";
+      d.textContent = line;
+      logsDrawer.appendChild(d);
+      logsDrawer.scrollTop = logsDrawer.scrollHeight;
+    }
+
+    function isPlaylistCollectionUrl(rawUrl) {
+      try {
+        const parsed = new URL(rawUrl);
+        return parsed.searchParams.has("list") || /\/(playlist|playlists|album|albums|sets|mix|channel|artist|user|c)(\/|$)/i.test(parsed.pathname) || /^\/@[^/]+(?:\/|$)/i.test(parsed.pathname);
+      } catch {
+        return false;
+      }
+    }
+
+    // Fetch one playlist or combine multiple playlist URLs into one selection/queue.
+    btnFetchLinks.addEventListener("click", async () => {
+      const pageUrl = bulkUrlInput.value.trim();
+      const rawText = manualLinksArea.value.trim();
+      const manualUrls = rawText.split(/\r?\n/).map(line => line.trim()).filter(line => /^https?:\/\//i.test(line));
+      const sourceUrls = [...new Set([...(pageUrl ? [pageUrl] : []), ...manualUrls])];
+      const containsPlaylist = sourceUrls.some(isPlaylistCollectionUrl);
+
+      if (!pageUrl && !rawText) {
+        bulkUrlInput.focus();
+        return;
+      }
+      if (containsPlaylist && sourceUrls.length > 20) {
+        alertBanner.className = "alert-banner error";
+        alertBanner.style.display = "flex";
+        alertMsg.textContent = "Please fetch at most 20 playlist/source URLs at a time.";
+        return;
+      }
+
+      btnFetchLinks.disabled = true;
+      const fetchTextEl = document.getElementById("fetchBtnText");
+      if (fetchTextEl) fetchTextEl.innerHTML = `<span class="spinner"></span> Inspecting...`;
+      alertBanner.style.display = "none";
+      playlistBanner.style.display = "none";
+      tracksContainer.style.display = "none";
+
+      try {
+        let data;
+        if (containsPlaylist) {
+          const entries = [];
+          const sources = [];
+          const warnings = [];
+
+          for (let i = 0; i < sourceUrls.length; i++) {
+            const sourceUrl = sourceUrls[i];
+            let sourceLabel = `Source ${i + 1}`;
+            try { sourceLabel = new URL(sourceUrl).hostname; } catch {}
+            if (fetchTextEl) fetchTextEl.textContent = `Fetching ${i + 1}/${sourceUrls.length}...`;
+
+            try {
+              const response = await fetch("/api/extract-links", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: sourceUrl })
+              });
+              const sourceData = await response.json();
+              if (!response.ok || !sourceData.success || !Array.isArray(sourceData.entries) || sourceData.entries.length === 0) {
+                throw new Error(sourceData.error || "No tracks found");
+              }
+
+              const title = sourceData.playlist?.title || sourceLabel;
+              sources.push({ title, author: sourceData.playlist?.author || "", thumbnail: sourceData.playlist?.thumbnail || "" });
+              for (const entry of sourceData.entries) {
+                entries.push({
+                  ...entry,
+                  sourcePlaylist: sourceUrls.length > 1 ? title : undefined,
+                  originalIndex: entries.length
+                });
+              }
+            } catch (error) {
+              warnings.push(`${sourceLabel}: ${String(error).replace(/\s+/g, " ").slice(0, 220)}`);
+            }
+          }
+
+          if (entries.length === 0) {
+            throw new Error(warnings.join("; ") || "No tracks found in the supplied playlists.");
+          }
+
+          const sourceNames = sources.map(source => source.title);
+          const sourceSummary = sourceNames.slice(0, 3).join(" • ") + (sourceNames.length > 3 ? ` • +${sourceNames.length - 3} more` : "");
+          data = {
+            success: true,
+            count: entries.length,
+            entries,
+            sources,
+            warnings,
+            playlist: {
+              title: sources.length > 1 ? `${sources.length} sources loaded` : sourceNames[0],
+              author: sources.length > 1 ? sourceSummary : (sources[0]?.author || "Curated Collection"),
+              thumbnail: sources[0]?.thumbnail || entries.find(entry => entry.thumbnail)?.thumbnail || ""
+            }
+          };
+        } else {
+          const requestBody = rawText
+            ? { rawText: sourceUrls.length > 0 ? sourceUrls.join("\n") : rawText }
+            : { url: pageUrl };
+          const response = await fetch("/api/extract-links", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody)
+          });
+          data = await response.json();
+        }
+
+        if (!data.success || !data.entries || data.entries.length === 0) {
+          alertBanner.className = "alert-banner error";
+          alertBanner.style.display = "flex";
+          alertMsg.textContent = data.error || "No video or music tracks found on this page/playlist.";
+          return;
+        }
+
+        completedTrackUrls = new Set();
+        extractedTracks = data.entries.map((track, index) => ({
+          ...track,
+          originalIndex: index
+        }));
+
+        // Render playlist or combined playlist header.
+        if (data.playlist && data.playlist.title) {
+          playlistTitle.textContent = data.playlist.title;
+          playlistAuthor.textContent = data.playlist.author || "Curated Collection";
+          playlistTracksCount.textContent = data.sources?.length > 1
+            ? `${data.count} tracks from ${data.sources.length} sources`
+            : `${data.count} tracks`;
+          const cover = data.playlist.thumbnail || extractedTracks.find(track => track.thumbnail)?.thumbnail;
+          if (cover) playlistCover.src = cover;
+          playlistBanner.style.display = "flex";
+        }
+
+        calculateRanks(extractedTracks);
+        const hasAnyViews = extractedTracks.some(track => track.viewCount && track.viewCount > 0);
+        setSortMode(hasAnyViews ? "popular" : "original");
+        renderTracks();
+        tracksContainer.style.display = "flex";
+        await syncDiskCompletedTracks();
+
+        if (data.warnings?.length) {
+          alertBanner.className = "alert-banner warning";
+          alertBanner.style.display = "flex";
+          alertMsg.textContent = `Loaded ${data.sources.length} source(s), but some failed: ${data.warnings.join(" | ")}`;
+        }
+
+        // Auto-fetch missing views in background for manageable playlist sizes.
+        const missingViews = extractedTracks.filter(track => !track.viewCount || track.viewCount <= 0);
+        if (missingViews.length > 0 && extractedTracks.length <= 300) {
+          fetchAllViews(true);
+        }
+      } catch (err) {
+        alertBanner.className = "alert-banner error";
+        alertBanner.style.display = "flex";
+        alertMsg.textContent = String(err);
+      } finally {
+        btnFetchLinks.disabled = false;
+        if (fetchTextEl) fetchTextEl.textContent = "Fetch Playlist(s)";
+      }
+    });
+
+    // Sync Completed Tracks with Disk in Selected Directory
+    async function syncDiskCompletedTracks() {
+      if (!extractedTracks || extractedTracks.length === 0) return;
+      try {
+        const res = await fetch("/api/check-downloaded", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dir: currentDownloadDir,
+            items: extractedTracks.map((t, idx) => ({ id: t.id, url: t.url, title: t.title, originalIndex: idx }))
+          })
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.completedUrls)) {
+          for (const u of data.completedUrls) {
+            completedTrackUrls.add(u);
+          }
+          if (Array.isArray(data.completedIds)) {
+            for (const cid of data.completedIds) {
+              const matched = extractedTracks.find(t => t.id === cid);
+              if (matched) completedTrackUrls.add(matched.url);
+            }
+          }
+
+          extractedTracks.forEach((track, idx) => {
+            if (completedTrackUrls.has(track.url)) {
+              const row = document.getElementById(`row_${idx}`);
+              if (row) {
+                row.classList.add("completed");
+                row.classList.remove("selected");
+                const chk = row.querySelector(".track-checkbox");
+                if (chk) chk.checked = false;
+                let pill = row.querySelector(".track-status-pill");
+                if (!pill) {
+                  pill = document.createElement("span");
+                  pill.className = "track-status-pill success";
+                  row.appendChild(pill);
+                }
+                const filename = data.existingFileMap ? data.existingFileMap[track.url] || data.existingFileMap[track.id] : "";
+                pill.textContent = filename ? "⚡ On Disk" : "✅ Done";
+              }
+            }
+          });
+          updateSelectedCount();
+        }
+      } catch (e) {
+        console.warn("Failed to check downloaded files on disk:", e);
+      }
+    }
+
+    // Safe Update of Selected Count & Button State
+    function updateSelectedCount() {
+      const allSelectedCheckboxes = document.querySelectorAll(".tracks-list .track-checkbox:checked");
+      const selected = allSelectedCheckboxes.length;
+      if (resultsCountBadge) {
+        resultsCountBadge.textContent = `${selected} / ${extractedTracks.length} Selected`;
+      }
+      const bulkBtn = document.getElementById("btnBulkDownload");
+      const bulkTextEl = document.getElementById("bulkBtnText");
+      const newLabel = (completedTrackUrls.size > 0 && selected < extractedTracks.length)
+        ? `⚡ Resume Download (${selected} Tracks Remaining)`
+        : `⚡ Bulk Download Selected (${selected} Tracks)`;
+
+      if (bulkTextEl) {
+        bulkTextEl.textContent = newLabel;
+      } else if (bulkBtn && !isProcessing) {
+        bulkBtn.innerHTML = `<span id="bulkBtnText">${newLabel}</span>`;
+      }
+      if (bulkBtn && !isProcessing) {
+        bulkBtn.disabled = selected === 0;
+      }
+    }
+
+    document.getElementById("btnSelectAll").addEventListener("click", () => {
+      document.querySelectorAll(".tracks-list .track-checkbox").forEach(c => {
+        c.checked = true;
+        c.closest(".track-row")?.classList.add("selected");
+      });
+      updateSelectedCount();
+    });
+
+    document.getElementById("btnDeselectAll").addEventListener("click", () => {
+      document.querySelectorAll(".tracks-list .track-checkbox").forEach(c => {
+        c.checked = false;
+        c.closest(".track-row")?.classList.remove("selected");
+      });
+      updateSelectedCount();
+    });
+
+    // Popularity Ranking & Sorting State
+    let currentSort = "popular";
+    let isFetchingViews = false;
+
+    function calculateRanks(tracks) {
+      if (!tracks || tracks.length === 0) return;
+      const ranked = tracks
+        .filter(t => typeof t.viewCount === "number" && t.viewCount > 0)
+        .sort((a, b) => b.viewCount - a.viewCount);
+
+      ranked.forEach((t, i) => {
+        t.rank = i + 1;
+      });
+    }
+
+    function parseDurationSeconds(dur) {
+      if (!dur) return 0;
+      const parts = dur.split(":").map(Number);
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return 0;
+    }
+
+    function getSortedAndFilteredTracks() {
+      const q = (trackFilterInput ? trackFilterInput.value : "").trim().toLowerCase();
+      let list = extractedTracks;
+      if (q) {
+        list = extractedTracks.filter(t =>
+          (t.title && t.title.toLowerCase().includes(q)) ||
+          (t.author && t.author.toLowerCase().includes(q)) ||
+          (t.album && t.album.toLowerCase().includes(q))
+        );
+      }
+
+      const copy = [...list];
+      if (currentSort === "popular") {
+        copy.sort((a, b) => {
+          const vA = a.viewCount || 0;
+          const vB = b.viewCount || 0;
+          if (vA !== vB) return vB - vA;
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        });
+      } else if (currentSort === "original") {
+        copy.sort((a, b) => (a.originalIndex || 0) - (b.originalIndex || 0));
+      } else if (currentSort === "duration") {
+        copy.sort((a, b) => parseDurationSeconds(b.duration) - parseDurationSeconds(a.duration));
+      } else if (currentSort === "title") {
+        copy.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+      }
+      return copy;
+    }
+
+    function setSortMode(mode) {
+      currentSort = mode;
+      document.querySelectorAll(".btn-sort").forEach(btn => btn.classList.remove("active"));
+      if (mode === "popular") document.getElementById("btnSortPopular")?.classList.add("active");
+      else if (mode === "original") document.getElementById("btnSortOriginal")?.classList.add("active");
+      else if (mode === "duration") document.getElementById("btnSortDuration")?.classList.add("active");
+      else if (mode === "title") document.getElementById("btnSortTitle")?.classList.add("active");
+      renderTracks();
+    }
+
+    document.getElementById("btnSortPopular")?.addEventListener("click", () => setSortMode("popular"));
+    document.getElementById("btnSortOriginal")?.addEventListener("click", () => setSortMode("original"));
+    document.getElementById("btnSortDuration")?.addEventListener("click", () => setSortMode("duration"));
+    document.getElementById("btnSortTitle")?.addEventListener("click", () => setSortMode("title"));
+
+    function selectTopN(n) {
+      const topUrls = new Set(
+        extractedTracks
+          .filter(t => t.rank && t.rank <= n)
+          .map(t => t.url)
+      );
+
+      document.querySelectorAll(".tracks-list .track-checkbox").forEach(chk => {
+        const idx = parseInt(chk.getAttribute("data-idx"));
+        const track = extractedTracks[idx];
+        const isSelected = track && topUrls.has(track.url);
+        chk.checked = isSelected;
+        const row = chk.closest(".track-row");
+        if (row) {
+          if (isSelected) row.classList.add("selected");
+          else row.classList.remove("selected");
+        }
+      });
+      updateSelectedCount();
+    }
+
+    document.getElementById("btnSelectTop10")?.addEventListener("click", () => selectTopN(10));
+    document.getElementById("btnSelectTop25")?.addEventListener("click", () => selectTopN(25));
+    document.getElementById("btnSelectTop50")?.addEventListener("click", () => selectTopN(50));
+
+    async function fetchAllViews(silent = false) {
+      if (isFetchingViews || !extractedTracks || extractedTracks.length === 0) return;
+      isFetchingViews = true;
+      const btn = document.getElementById("btnFetchAllViews");
+      if (btn) btn.innerHTML = `<span class="spinner"></span> Updating...`;
+
+      try {
+        const res = await fetch("/api/fetch-views", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: extractedTracks.map(t => ({ id: t.id, url: t.url }))
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.viewsMap) {
+          extractedTracks.forEach(t => {
+            const vInfo = data.viewsMap[t.id] || (t.url ? data.viewsMap[t.url] : null);
+            if (vInfo && vInfo.viewCount) {
+              t.viewCount = vInfo.viewCount;
+              t.viewCountFormatted = vInfo.viewCountFormatted;
+            }
+          });
+
+          calculateRanks(extractedTracks);
+          renderTracks();
+        }
+      } catch (err) {
+        console.warn("Failed to fetch views:", err);
+      } finally {
+        isFetchingViews = false;
+        if (btn) btn.textContent = "⚡ Refresh Plays";
+      }
+    }
+
+    document.getElementById("btnFetchAllViews")?.addEventListener("click", () => fetchAllViews(false));
+
+    // Render Track Cards
+    function renderTracks() {
+      const tracksToRender = getSortedAndFilteredTracks();
+      if (!tracksToRender || tracksToRender.length === 0) {
+        linksList.innerHTML = `<div class="empty-state">No matching tracks found.</div>`;
+        return;
+      }
+
+      linksList.innerHTML = tracksToRender.map((track) => {
+        const realIdx = track.originalIndex !== undefined ? track.originalIndex : extractedTracks.indexOf(track);
+        const thumbUrl = track.thumbnail || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='%231e293b'><rect width='48' height='48'/><text x='50%' y='50%' fill='%2364748b' font-size='16' text-anchor='middle' dy='.3em'>🎵</text></svg>`;
+        const safeThumbUrl = escapeHtml(thumbUrl);
+        const authorText = track.author || "Unknown Artist";
+        const safeTitle = escapeHtml(track.title);
+        const safeAuthor = escapeHtml(authorText);
+        const albumText = track.album ? `<span class="track-dot">&bull;</span><span class="track-album" title="${escapeHtml(track.album)}">${escapeHtml(track.album)}</span>` : "";
+        const sourcePlaylistText = track.sourcePlaylist
+          ? `<span class="track-dot">&bull;</span><span class="track-album" title="Source playlist: ${escapeHtml(track.sourcePlaylist)}">📂 ${escapeHtml(track.sourcePlaylist)}</span>`
+          : "";
+        const durationText = track.duration || "";
+        const isDone = completedTrackUrls.has(track.url);
+        const rowClass = isDone ? "track-row completed" : "track-row selected";
+        const isChecked = isDone ? "" : "checked";
+        const statusBadge = isDone ? `<span class="track-status-pill success">✅ Done</span>` : "";
+
+        // Popularity Rank Badge
+        let rankHtml = `<span class="track-index">${realIdx + 1}</span>`;
+        const rank = Number(track.rank);
+        if (Number.isInteger(rank) && rank > 0) {
+          let badgeClass = "rank-badge";
+          let badgeIcon = `#${rank}`;
+          if (rank === 1) {
+            badgeClass += " rank-1";
+            badgeIcon = `🏆 #1`;
+          } else if (rank === 2) {
+            badgeClass += " rank-2";
+            badgeIcon = `🥈 #2`;
+          } else if (rank === 3) {
+            badgeClass += " rank-3";
+            badgeIcon = `🥉 #3`;
+          } else if (rank <= 10) {
+            badgeClass += " rank-top10";
+          }
+          rankHtml = `<span class="${badgeClass}" title="Popularity Rank #${rank}">${badgeIcon}</span>`;
+        }
+
+        const playsHtml = track.viewCountFormatted ? `<span class="plays-pill" title="${Number(track.viewCount || 0).toLocaleString()} total plays">🔥 ${escapeHtml(track.viewCountFormatted)}</span>` : "";
+
+        return `
+          <div class="${rowClass}" id="row_${realIdx}">
+            <input type="checkbox" class="track-checkbox" id="chk_${realIdx}" data-idx="${realIdx}" ${isChecked}>
+            ${rankHtml}
+            <img class="track-thumb" src="${safeThumbUrl}" alt="Cover" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' fill=\'%231e293b\'><rect width=\'48\' height=\'48\'/><text x=\'50%\' y=\'50%\' fill=\'%2364748b\' font-size=\'16\' text-anchor=\'middle\' dy=\'.3em\'>🎵</text></svg>'">
+            <div class="track-info">
+              <span class="track-title" title="${safeTitle}">${safeTitle}</span>
+              <div class="track-meta-line">
+                ${playsHtml}
+                <span class="track-author" title="${safeAuthor}">👤 ${safeAuthor}</span>
+                ${albumText}
+                ${sourcePlaylistText}
+              </div>
+            </div>
+            ${statusBadge}
+            ${durationText ? `<span class="track-duration">${escapeHtml(durationText)}</span>` : ""}
+          </div>
+        `;
+      }).join("");
+
+      updateSelectedCount();
+
+      // Checkbox click handlers
+      linksList.querySelectorAll(".track-checkbox").forEach(chk => {
+        chk.addEventListener("change", () => {
+          const row = chk.closest(".track-row");
+          if (chk.checked) row.classList.add("selected");
+          else row.classList.remove("selected");
+          updateSelectedCount();
+        });
+      });
+    }
+
+    // Filter input
+    trackFilterInput.addEventListener("input", () => {
+      renderTracks();
+    });
+
+    // Format & Quality Chip Selection
+    document.querySelectorAll(".quality-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const q = chip.getAttribute("data-quality");
+        if (!q) return;
+        selectedQuality = q;
+        document.querySelectorAll(".quality-chip").forEach(c => {
+          c.classList.toggle("active", c.getAttribute("data-quality") === q);
+        });
+      });
+    });
+
+    // Stop / Cancel Active Download
+    async function stopActiveDownload() {
+      if (!isProcessing) return;
+      if (autoReconnectTimer) {
+        clearInterval(autoReconnectTimer);
+        autoReconnectTimer = null;
+      }
+      if (btnStopActiveDownload) {
+        btnStopActiveDownload.disabled = true;
+        btnStopActiveDownload.innerHTML = `<span class="spinner"></span> Stopping...`;
+      }
+      if (btnStopProgressDownload) {
+        btnStopProgressDownload.disabled = true;
+        btnStopProgressDownload.innerHTML = `<span class="spinner"></span> Stopping...`;
+      }
+      statusLabel.textContent = "Stopping download process...";
+      statusIcon.textContent = "⏳";
+
+      try {
+        await fetch("/api/stop-download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: activeSessionId })
+        });
+      } catch (err) {
+        console.warn("Stop request error:", err);
+      }
+
+      if (currentReader) {
+        try { await currentReader.cancel(); } catch {}
+      }
+    }
+
+    if (btnStopActiveDownload) {
+      btnStopActiveDownload.addEventListener("click", stopActiveDownload);
+    }
+    if (btnStopProgressDownload) {
+      btnStopProgressDownload.addEventListener("click", stopActiveDownload);
+    }
+
+    // Auto-reconnect & resume timer state
+    let autoReconnectTimer = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 10;
+
+    function triggerAutoReconnect(reason) {
+      if (isProcessing) return;
+      const allSelected = document.querySelectorAll(".tracks-list .track-checkbox:checked");
+      const remaining = allSelected.length;
+      if (remaining === 0) return;
+
+      if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        alertMsg.innerHTML = `⚠️ Network disconnected after ${MAX_RECONNECT_ATTEMPTS} attempts (${completedTrackUrls.size} completed, ${remaining} remaining). Please verify connection and click Resume to continue.`;
+        if (btnResumeDownload) {
+          btnResumeDownload.style.display = "inline-flex";
+          btnResumeDownload.textContent = `🔄 Resume Download (${remaining} Tracks Left)`;
+        }
+        return;
+      }
+
+      reconnectAttempts++;
+      let countdown = 5;
+      alertBanner.className = "alert-banner warning";
+      alertBanner.style.display = "flex";
+
+      const renderCountdown = () => {
+        alertMsg.innerHTML = `⚠️ <b>Network interrupted:</b> ${escapeHtml(reason)}. Auto-resuming <b>${remaining} remaining track(s)</b> in <b id="countdownSec" style="color:#06b6d4;font-size:15px;">${countdown}s</b>... (Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`;
+      };
+      renderCountdown();
+
+      if (btnResumeDownload) {
+        btnResumeDownload.style.display = "inline-flex";
+        btnResumeDownload.textContent = `⚡ Resume Now (${remaining} Left)`;
+      }
+
+      if (autoReconnectTimer) clearInterval(autoReconnectTimer);
+      autoReconnectTimer = setInterval(() => {
+        countdown--;
+        if (countdown <= 0) {
+          clearInterval(autoReconnectTimer);
+          autoReconnectTimer = null;
+          if (btnBulkDownload && !isProcessing) {
+            btnBulkDownload.click();
+          }
+        } else {
+          const countEl = document.getElementById("countdownSec");
+          if (countEl) countEl.textContent = `${countdown}s`;
+        }
+      }, 1000);
+    }
+
+    // Reconnect immediately if browser detects internet is restored
+    window.addEventListener("online", () => {
+      if (autoReconnectTimer) {
+        clearInterval(autoReconnectTimer);
+        autoReconnectTimer = null;
+        alertMsg.innerHTML = `🌐 Internet restored! Resuming remaining downloads...`;
+        setTimeout(() => {
+          if (btnBulkDownload && !isProcessing) btnBulkDownload.click();
+        }, 600);
+      }
+    });
+
+    // Single Download
+    btnSingleDownload.addEventListener("click", () => {
+      const url = singleUrlInput.value.trim();
+      if (!url) { singleUrlInput.focus(); return; }
+      startDownloadStream("/api/download", { url, quality: selectedQuality, dir: currentDownloadDir }, btnSingleDownload, "Download Media");
+    });
+
+    // Bulk Download
+    btnBulkDownload.addEventListener("click", () => {
+      if (autoReconnectTimer) {
+        clearInterval(autoReconnectTimer);
+        autoReconnectTimer = null;
+      }
+      const selectedCheckboxes = document.querySelectorAll(".tracks-list .track-checkbox:checked");
+      const chkRank = document.getElementById("chkNumberByRank");
+      const numberByRank = chkRank ? chkRank.checked : false;
+
+      const items = Array.from(selectedCheckboxes).map(c => {
+        const idx = parseInt(c.getAttribute("data-idx"));
+        const track = extractedTracks[idx];
+        return {
+          originalIndex: idx,
+          id: track.id,
+          url: track.url,
+          title: track.title,
+          author: track.author,
+          album: track.album,
+          thumbnail: track.thumbnail,
+          rank: track.rank
+        };
+      });
+
+      if (items.length === 0) return;
+      startDownloadStream("/api/bulk-download", { items, quality: selectedQuality, dir: currentDownloadDir, numberByRank }, btnBulkDownload, "Bulk Download Selected Tracks");
+    });
+
+    // Unified SSE Stream Runner
+    async function startDownloadStream(endpoint, payload, actionBtn, defaultBtnLabel) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      activeSessionId = crypto.randomUUID();
+      payload.sessionId = activeSessionId;
+      payload.dir = payload.dir || currentDownloadDir;
+
+      actionBtn.disabled = true;
+      const spanInside = actionBtn.querySelector("span");
+      if (spanInside) {
+        spanInside.innerHTML = `<span class="spinner"></span> Downloading...`;
+      } else {
+        actionBtn.innerHTML = `<span class="spinner"></span> Downloading...`;
+      }
+
+      progressSection.style.display = "block";
+      activeDownloadCard.style.display = "none";
+      progressBarFill.style.width = "0%";
+      progressBarFill.style.background = "linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%)";
+      progressPercent.textContent = "0%";
+      statusLabel.textContent = "Connecting to media stream...";
+      statusIcon.textContent = "⚡";
+      metaSpeed.textContent = "Speed: --";
+      metaSize.textContent = "Size: --";
+      metaEta.textContent = "ETA: --";
+      logsDrawer.innerHTML = "";
+      alertBanner.style.display = "none";
+      btnAlertOpenFolder.style.display = "none";
+      if (btnResumeDownload) btnResumeDownload.style.display = "none";
+
+      if (btnStopActiveDownload) {
+        btnStopActiveDownload.disabled = false;
+        btnStopActiveDownload.innerHTML = "⏹️ Stop";
+        btnStopActiveDownload.style.display = "inline-flex";
+      }
+      if (btnStopProgressDownload) {
+        btnStopProgressDownload.disabled = false;
+        btnStopProgressDownload.innerHTML = "⏹️ Stop";
+        btnStopProgressDownload.style.display = "inline-flex";
+      }
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.body) throw new Error("No response body received from server.");
+
+        const reader = response.body.getReader();
+        currentReader = reader;
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split("\n\n");
+          buffer = events.pop() || "";
+
+          for (const ev of events) {
+            if (!ev.trim()) continue;
+            const lines = ev.split("\n");
+            let eventType = "message";
+            let dataStr = "";
+
+            for (const l of lines) {
+              if (l.startsWith("event: ")) eventType = l.substring(7).trim();
+              if (l.startsWith("data: ")) dataStr = l.substring(6).trim();
+            }
+
+            try {
+              const data = JSON.parse(dataStr);
+
+              if (eventType === "ping") {
+                // Heartbeat keepalive from server
+                continue;
+              }
+              else if (eventType === "session") {
+                if (data.sessionId) activeSessionId = data.sessionId;
+              }
+              else if (eventType === "item-start") {
+                activeDownloadCard.style.display = "flex";
+                activeTitle.textContent = data.title || "Downloading track...";
+                activeArtist.textContent = data.author ? `👤 ${data.author}` : (data.album || "");
+                activeTrackNumber.textContent = `${data.batchIndex || data.index} / ${data.total}`;
+                if (data.thumbnail) {
+                  activeThumb.src = data.thumbnail;
+                }
+                statusLabel.textContent = `[${data.batchIndex || data.index}/${data.total}] Downloading: ${data.title || data.url}`;
+                statusIcon.textContent = "⏳";
+              }
+              else if (eventType === "progress") {
+                if (data.percent !== undefined) {
+                  progressBarFill.style.width = `${data.percent}%`;
+                  progressPercent.textContent = `${Math.round(data.percent)}%`;
+                }
+                if (data.speed) metaSpeed.textContent = `Speed: ${data.speed}`;
+                if (data.totalSize) metaSize.textContent = `Size: ${data.totalSize}`;
+                if (data.eta) metaEta.textContent = `ETA: ${data.eta}`;
+              }
+              else if (eventType === "log") {
+                appendLog(data.message, data.type);
+              }
+              else if (eventType === "item-done") {
+                if (data.success) {
+                  if (data.url) completedTrackUrls.add(data.url);
+                  const targetIdx = (data.index !== undefined) ? (data.index - 1) : -1;
+                  const row = (targetIdx >= 0) ? document.getElementById(`row_${targetIdx}`) : null;
+                  if (row) {
+                    row.classList.add("completed");
+                    row.classList.remove("selected");
+                    const chk = row.querySelector(".track-checkbox");
+                    if (chk) chk.checked = false;
+                    let pill = row.querySelector(".track-status-pill");
+                    if (!pill) {
+                      pill = document.createElement("span");
+                      pill.className = "track-status-pill success";
+                      row.appendChild(pill);
+                    }
+                    pill.textContent = data.skipped ? "⚡ Skipped (Exists)" : "✅ Done";
+                  }
+                  updateSelectedCount();
+                  reconnectAttempts = 0; // Reset network attempts on success
+                }
+              }
+              else if (eventType === "stopped") {
+                statusLabel.textContent = "Download stopped by user.";
+                statusIcon.textContent = "⏹️";
+                progressBarFill.style.background = "linear-gradient(90deg, #f59e0b, #ef4444)";
+                alertBanner.className = "alert-banner warning";
+                alertBanner.style.display = "flex";
+                alertMsg.textContent = data.message || "Download was stopped.";
+                btnAlertOpenFolder.style.display = "inline-flex";
+                refreshHistory(currentDownloadDir);
+              }
+              else if (eventType === "done") {
+                if (data.success) {
+                  progressBarFill.style.width = "100%";
+                  progressPercent.textContent = "100%";
+                  statusLabel.textContent = "All downloads complete!";
+                  statusIcon.textContent = "✅";
+
+                  alertBanner.className = "alert-banner success";
+                  alertBanner.style.display = "flex";
+                  alertMsg.textContent = data.message || `All files successfully saved to ${data.dir || currentDownloadDir}!`;
+                  btnAlertOpenFolder.style.display = "inline-flex";
+
+                  refreshHistory(currentDownloadDir);
+                } else {
+                  statusLabel.textContent = "Download completed with some errors.";
+                  statusIcon.textContent = "⚠️";
+                  alertBanner.className = "alert-banner error";
+                  alertBanner.style.display = "flex";
+                  alertMsg.textContent = data.message || "Download encountered errors.";
+                  logsDrawer.style.display = "block";
+                }
+              }
+            } catch (e) {
+              console.warn("Error parsing event data:", e);
+            }
+          }
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          const errStr = String(err).toLowerCase();
+          const isNet = errStr.includes("network") || 
+                        errStr.includes("failed to fetch") || 
+                        (err.name === "TypeError" && !errStr.includes("textcontent") && !errStr.includes("null"));
+
+          if (isNet) {
+            statusLabel.textContent = "Network interrupted. Preparing auto-resume...";
+            statusIcon.textContent = "🔄";
+            triggerAutoReconnect("Connection interrupted");
+          } else {
+            statusLabel.textContent = "Download interrupted.";
+            statusIcon.textContent = "❌";
+            alertBanner.className = "alert-banner error";
+            alertBanner.style.display = "flex";
+            alertMsg.textContent = String(err);
+          }
+          if (btnAlertOpenFolder) btnAlertOpenFolder.style.display = "inline-flex";
+        }
+      } finally {
+        isProcessing = false;
+        currentReader = null;
+        activeSessionId = null;
+        actionBtn.disabled = false;
+        if (actionBtn.id === "btnBulkDownload") {
+          updateSelectedCount();
+        } else {
+          actionBtn.innerHTML = `<span>${defaultBtnLabel}</span>`;
+        }
+        if (btnStopActiveDownload) btnStopActiveDownload.style.display = "none";
+        if (btnStopProgressDownload) btnStopProgressDownload.style.display = "none";
+      }
+    }
+
+    if (btnResumeDownload) {
+      btnResumeDownload.addEventListener("click", () => {
+        if (autoReconnectTimer) {
+          clearInterval(autoReconnectTimer);
+          autoReconnectTimer = null;
+        }
+        btnResumeDownload.style.display = "none";
+        btnBulkDownload.click();
+      });
+    }
+
+    initSystem();
+  </script>
+</body>
+</html>
